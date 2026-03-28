@@ -1,0 +1,39 @@
+# Environment files
+.env
+.env.local
+.env.*.local
+!.env.example
+!frontend/.env.local.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+build/
+
+# Django
+backend/staticfiles/
+backend/media/
+backend/*.sqlite3
+
+# Node / Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Docker
+*.override.yml
