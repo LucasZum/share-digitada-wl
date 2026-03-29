@@ -49,7 +49,7 @@ export default function UserDetailPage() {
       </div>
 
       {/* Profile */}
-      <Card>
+      <Card flat>
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center">
             <span className="text-xl font-bold text-[var(--color-primary)]">{user.full_name[0]}</span>
@@ -71,7 +71,7 @@ export default function UserDetailPage() {
       </Card>
 
       {/* Metrics */}
-      <Card>
+      <Card flat>
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-gray-900">Métricas</h3>
           <div className="flex gap-2">

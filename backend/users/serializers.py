@@ -19,7 +19,8 @@ def generate_temp_password(length=12) -> str:
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'email', 'full_name', 'role', 'is_active', 'notice_message', 'created_at', 'updated_at']
+        fields = ['id', 'email', 'full_name', 'role', 'is_active', 'notice_message',
+                  'must_change_password', 'terms_accepted', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
 
 
@@ -30,12 +31,12 @@ class CreateUserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         temp_password = generate_temp_password()
-        validated_data['_temp_password'] = temp_password
         user = User.objects.create_user(
             email=validated_data['email'],
             full_name=validated_data['full_name'],
             password=temp_password,
             role=validated_data.get('role', 'user'),
+            must_change_password=True,
         )
         user._temp_password = temp_password
         return user

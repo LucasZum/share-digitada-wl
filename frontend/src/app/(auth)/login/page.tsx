@@ -42,6 +42,16 @@ export default function LoginPage() {
         return
       }
 
+      // Onboarding gates
+      if (user.must_change_password) {
+        router.push('/first-access')
+        return
+      }
+      if (!user.terms_accepted) {
+        router.push('/terms')
+        return
+      }
+
       // Check if user has active Stripe account
       try {
         const accounts = await listStripeAccounts()

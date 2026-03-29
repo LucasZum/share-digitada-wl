@@ -17,7 +17,7 @@ function MetricCard({ title, value, icon: Icon, colorClass }: {
   title: string; value: string; icon: React.ElementType; colorClass: string
 }) {
   return (
-    <Card padding="md">
+    <Card padding="md" flat>
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">{title}</p>
@@ -75,7 +75,7 @@ export default function DashboardPage() {
             <MetricCard title="Taxa Aprovação" value={`${metrics?.approval_rate || 0}%`} icon={Percent} colorClass="bg-blue-500" />
           </div>
 
-          <Card padding="md">
+          <Card padding="md" flat>
             <div className="flex items-center gap-2 mb-1">
               <Users className="w-4 h-4 text-[var(--color-primary)]" />
               <p className="text-sm font-medium text-gray-600">Usuários Ativos</p>
@@ -84,7 +84,7 @@ export default function DashboardPage() {
           </Card>
 
           {chart.length > 0 && (
-            <Card padding="md">
+            <Card padding="md" flat>
               <h3 className="text-sm font-semibold text-gray-700 mb-4">Volume por Dia</h3>
               <ResponsiveContainer width="100%" height={220}>
                 <AreaChart data={chart} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>

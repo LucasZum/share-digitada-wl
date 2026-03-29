@@ -7,6 +7,8 @@ export interface User {
   role: UserRole
   is_active: boolean
   notice_message?: string
+  must_change_password: boolean
+  terms_accepted: boolean
   created_at: string
   updated_at: string
 }

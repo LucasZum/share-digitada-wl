@@ -2,7 +2,7 @@
 import { useState, useCallback } from 'react'
 import { formatBRLInput } from '@/lib/utils/currency'
 
-const MAX_CENTS = 9999900 // R$ 99.999,00
+const MAX_CENTS = 99999999 // R$ 999.999,99 (limite máximo da Stripe para BRL)
 
 export function useAmountInput() {
   const [cents, setCents] = useState(0)

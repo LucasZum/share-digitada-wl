@@ -26,6 +26,28 @@ def _client(secret_key_encrypted: str) -> stripe.StripeClient:
     return stripe.StripeClient(sk)
 
 
+def get_account_info(secret_key: str) -> dict:
+    """Fetch identifying info from the Stripe account. Never raises — returns empty dict on failure."""
+    try:
+        account = stripe.Account.retrieve(api_key=secret_key)
+        business_profile = getattr(account, 'business_profile', None)
+        company = getattr(account, 'company', None)
+        name = (
+            (business_profile and getattr(business_profile, 'name', None))
+            or (company and getattr(company, 'name', None))
+            or ''
+        )
+        return {
+            'stripe_account_id': account.id,
+            'account_name': name or '',
+            'account_email': account.email or '',
+            'charges_enabled': bool(account.charges_enabled),
+        }
+    except stripe.StripeError as exc:
+        logger.warning('Could not fetch Stripe account info: %s', exc)
+        return {}
+
+
 def validate_credentials(publishable_key: str, secret_key: str) -> bool:
     """Test the secret key by retrieving balance. Raises ValueError on failure."""
     if not secret_key.startswith(('sk_live_', 'sk_test_')):

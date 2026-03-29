@@ -52,7 +52,7 @@ export default function BillingPage() {
       </div>
 
       {/* Period selector */}
-      <Card padding="sm">
+      <Card padding="sm" flat>
         <div className="flex gap-3">
           <select
             value={month}
@@ -77,11 +77,11 @@ export default function BillingPage() {
 
       {/* Summary */}
       <div className="grid grid-cols-2 gap-4">
-        <Card padding="md">
+        <Card padding="md" flat>
           <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Volume Total</p>
           <p className="text-2xl font-bold text-gray-900">{centsToBRL(totalVolume)}</p>
         </Card>
-        <Card padding="md">
+        <Card padding="md" flat>
           <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Comissão (5%)</p>
           <p className="text-2xl font-bold text-success">{centsToBRL(totalFee)}</p>
         </Card>

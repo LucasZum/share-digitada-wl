@@ -18,6 +18,6 @@ class TransactionSerializer(serializers.ModelSerializer):
 
 
 class CreateTransactionSerializer(serializers.Serializer):
-    amount = serializers.IntegerField(min_value=100, max_value=9999900, help_text='Amount in cents')
+    amount = serializers.IntegerField(min_value=100, max_value=99999999, help_text='Amount in cents')
 
 

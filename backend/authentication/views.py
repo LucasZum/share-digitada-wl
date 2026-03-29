@@ -1,4 +1,5 @@
 import logging
+import re
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -9,6 +10,21 @@ from rest_framework_simplejwt.exceptions import TokenError
 from users.serializers import UserSerializer
 from audit_logs.service import AuditLogService
 from .serializers import CustomTokenObtainPairSerializer
+
+
+def _validate_password_strength(password: str) -> str | None:
+    """Returns error message if password is weak, else None."""
+    if len(password) < 8:
+        return 'A senha deve ter no mínimo 8 caracteres.'
+    if not re.search(r'[A-Z]', password):
+        return 'A senha deve conter pelo menos uma letra maiúscula.'
+    if not re.search(r'[a-z]', password):
+        return 'A senha deve conter pelo menos uma letra minúscula.'
+    if not re.search(r'\d', password):
+        return 'A senha deve conter pelo menos um número.'
+    if not re.search(r'[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]', password):
+        return 'A senha deve conter pelo menos um caractere especial.'
+    return None
 
 logger = logging.getLogger(__name__)
 
@@ -66,3 +82,29 @@ class MeView(APIView):
 
     def get(self, request):
         return Response(UserSerializer(request.user).data)
+
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        new_password = request.data.get('new_password', '')
+        error = _validate_password_strength(new_password)
+        if error:
+            return Response({'detail': error}, status=400)
+
+        user = request.user
+        user.set_password(new_password)
+        user.must_change_password = False
+        user.save(update_fields=['password', 'must_change_password', 'updated_at'])
+        return Response({'detail': 'Senha alterada com sucesso.'})
+
+
+class AcceptTermsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        user.terms_accepted = True
+        user.save(update_fields=['terms_accepted', 'updated_at'])
+        return Response({'detail': 'Termos aceitos.'})

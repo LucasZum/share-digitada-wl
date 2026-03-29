@@ -8,8 +8,9 @@ class StripeAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = StripeAccount
         fields = [
-            'id', 'publishable_key_suffix', 'is_active',
-            'activated_at', 'deactivated_at', 'created_at',
+            'id', 'publishable_key_suffix', 'stripe_account_id',
+            'account_name', 'account_email', 'charges_enabled',
+            'is_active', 'activated_at', 'deactivated_at', 'created_at',
         ]
 
     def get_publishable_key_suffix(self, obj):

@@ -36,6 +36,8 @@ class StripeAccountListCreateView(generics.GenericAPIView):
         except ValueError as exc:
             return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
+        info = stripe_service.get_account_info(sk)
+
         # Deactivate existing active accounts
         now = timezone.now()
         StripeAccount.objects.filter(user=request.user, is_active=True).update(
@@ -46,6 +48,10 @@ class StripeAccountListCreateView(generics.GenericAPIView):
             user=request.user,
             publishable_key=pk,
             secret_key_encrypted=encrypt(sk),
+            stripe_account_id=info.get('stripe_account_id', ''),
+            account_name=info.get('account_name', ''),
+            account_email=info.get('account_email', ''),
+            charges_enabled=info.get('charges_enabled', False),
         )
 
         AuditLogService.log(

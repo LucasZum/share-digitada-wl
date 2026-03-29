@@ -1,7 +1,7 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, User, Shield, LogOut, ChevronRight } from 'lucide-react'
+import { ChevronLeft, User, Shield, LogOut, Settings } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 import { logout } from '@/lib/api/auth'
@@ -11,14 +11,19 @@ import { Badge } from '@/components/ui/Badge'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { linkStripeAccount, listStripeAccounts } from '@/lib/api/stripe'
-import { useEffect } from 'react'
+import { linkStripeAccount, listStripeAccounts, type StripeAccount } from '@/lib/api/stripe'
+
+function maskAccountId(id: string): string {
+  if (!id) return '—'
+  if (id.length <= 8) return id
+  return `${id.slice(0, 5)}...${id.slice(-4)}`
+}
 
 export default function SettingsPage() {
   const router = useRouter()
   const { user, refreshToken, logout: storeLogout } = useAuthStore()
-  const [activeAccount, setActiveAccount] = useState<{ publishable_key_suffix: string; activated_at: string } | null>(null)
-  const [showUpdateModal, setShowUpdateModal] = useState(false)
+  const [activeAccount, setActiveAccount] = useState<StripeAccount | null>(null)
+  const [showManageModal, setShowManageModal] = useState(false)
   const [pk, setPk] = useState('')
   const [sk, setSk] = useState('')
   const [isUpdating, setIsUpdating] = useState(false)
@@ -44,7 +49,7 @@ export default function SettingsPage() {
     try {
       await linkStripeAccount(pk, sk)
       toast.success('Credenciais atualizadas!')
-      setShowUpdateModal(false)
+      setShowManageModal(false)
       setPk(''); setSk('')
       const accs = await listStripeAccounts()
       setActiveAccount(accs.find((a) => a.is_active) || null)
@@ -84,36 +89,57 @@ export default function SettingsPage() {
         <div className="flex items-center gap-2 mb-3">
           <Shield className="w-4 h-4 text-[var(--color-primary)]" />
           <h3 className="font-semibold text-gray-900 text-sm">Conta Stripe</h3>
+          <button
+            onClick={() => setShowManageModal(true)}
+            className="ml-auto p-1.5 rounded-lg text-gray-400 hover:text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-colors"
+            title="Gerenciar credenciais"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
         </div>
 
         {activeAccount ? (
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-gray-400">Status</span>
-              <Badge variant="success">● Ativa</Badge>
+              <Badge variant={activeAccount.charges_enabled ? 'success' : 'warning'}>
+                {activeAccount.charges_enabled ? '● Ativa' : '● Pendente'}
+              </Badge>
             </div>
+            {activeAccount.account_name && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Nome</span>
+                <span className="text-gray-600 text-right max-w-[60%] truncate">{activeAccount.account_name}</span>
+              </div>
+            )}
+            {activeAccount.account_email && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">E-mail</span>
+                <span className="text-gray-600 text-right max-w-[60%] truncate">{activeAccount.account_email}</span>
+              </div>
+            )}
+            {activeAccount.stripe_account_id && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">ID Stripe</span>
+                <span className="font-mono text-gray-500 text-xs">{maskAccountId(activeAccount.stripe_account_id)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-sm">
               <span className="text-gray-400">Chave pública</span>
               <span className="font-mono text-gray-600">{activeAccount.publishable_key_suffix}</span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-400">Ativada em</span>
-              <span className="text-gray-600">
-                {new Date(activeAccount.activated_at).toLocaleDateString('pt-BR')}
-              </span>
-            </div>
           </div>
         ) : (
-          <p className="text-sm text-gray-400">Nenhuma conta vinculada</p>
+          <div className="flex flex-col items-center gap-3 py-2">
+            <p className="text-sm text-gray-400">Nenhuma conta vinculada</p>
+            <button
+              onClick={() => setShowManageModal(true)}
+              className="text-sm text-[var(--color-primary)] hover:underline"
+            >
+              Conectar conta Stripe
+            </button>
+          </div>
         )}
-
-        <button
-          onClick={() => setShowUpdateModal(true)}
-          className="mt-4 w-full flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/5 transition-colors text-sm"
-        >
-          <span className="text-gray-600">Atualizar credenciais</span>
-          <ChevronRight className="w-4 h-4 text-gray-400" />
-        </button>
       </Card>
 
       {/* Logout */}
@@ -125,8 +151,50 @@ export default function SettingsPage() {
         <span className="font-medium text-sm">Sair da conta</span>
       </button>
 
-      {/* Update Stripe Modal */}
-      <Modal isOpen={showUpdateModal} onClose={() => setShowUpdateModal(false)} title="Atualizar Credenciais">
+      {/* Manage Stripe Modal */}
+      <Modal isOpen={showManageModal} onClose={() => { setShowManageModal(false); setPk(''); setSk('') }} title="Gerenciar Conta Stripe">
+        {activeAccount && (
+          <div className="mb-4 space-y-2 pb-4 border-b border-gray-100">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-400">Status</span>
+              <Badge variant={activeAccount.charges_enabled ? 'success' : 'warning'}>
+                {activeAccount.charges_enabled ? '● Ativa' : '● Pendente verificação'}
+              </Badge>
+            </div>
+            {activeAccount.account_name && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Nome</span>
+                <span className="text-gray-700 text-right max-w-[60%] truncate">{activeAccount.account_name}</span>
+              </div>
+            )}
+            {activeAccount.account_email && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">E-mail</span>
+                <span className="text-gray-700 text-right max-w-[60%] truncate">{activeAccount.account_email}</span>
+              </div>
+            )}
+            {activeAccount.stripe_account_id && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">ID Stripe</span>
+                <span className="font-mono text-gray-500 text-xs">{maskAccountId(activeAccount.stripe_account_id)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-400">Chave pública</span>
+              <span className="font-mono text-gray-600">{activeAccount.publishable_key_suffix}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-400">Vinculada em</span>
+              <span className="text-gray-600">
+                {new Date(activeAccount.activated_at).toLocaleDateString('pt-BR')}
+              </span>
+            </div>
+          </div>
+        )}
+
+        <p className="text-xs text-gray-400 mb-3">
+          {activeAccount ? 'Substituir credenciais' : 'Conectar conta Stripe'}
+        </p>
         <form onSubmit={handleUpdateStripe} className="space-y-4">
           <Input label="Chave Publicável" value={pk} onChange={(e) => setPk(e.target.value.trim())} placeholder="pk_live_..." />
           <Input label="Chave Secreta" type="password" value={sk} onChange={(e) => setSk(e.target.value.trim())} placeholder="sk_live_..." />

@@ -50,7 +50,8 @@ export function middleware(request: NextRequest) {
   // POS routes — redirect admin to dashboard
   if (pathname.startsWith('/pos') || pathname.startsWith('/payment') ||
       pathname.startsWith('/history') || pathname.startsWith('/settings') ||
-      pathname.startsWith('/setup')) {
+      pathname.startsWith('/setup') || pathname.startsWith('/first-access') ||
+      pathname.startsWith('/terms')) {
     if (role === 'admin') {
       return NextResponse.redirect(new URL('/admin/dashboard', request.url))
     }

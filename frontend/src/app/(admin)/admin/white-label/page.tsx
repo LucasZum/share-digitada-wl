@@ -70,7 +70,7 @@ export default function WhiteLabelPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Config Form */}
         <form onSubmit={handleSave} className="space-y-5">
-          <Card>
+          <Card flat>
             <h3 className="font-semibold text-gray-900 mb-4">Identidade Visual</h3>
 
             {/* Logo Upload */}
@@ -102,7 +102,7 @@ export default function WhiteLabelPage() {
             <Input label="Nome da marca" value={brandName} onChange={(e) => setBrandName(e.target.value)} />
           </Card>
 
-          <Card>
+          <Card flat>
             <h3 className="font-semibold text-gray-900 mb-4">
               <Palette className="w-4 h-4 inline mr-2 text-[var(--color-primary)]" />
               Cores
@@ -154,7 +154,7 @@ export default function WhiteLabelPage() {
 
         {/* Preview */}
         <div>
-          <Card>
+          <Card flat>
             <div className="flex items-center gap-2 mb-4">
               <Eye className="w-4 h-4 text-gray-400" />
               <h3 className="font-semibold text-gray-700 text-sm">Preview — Tela de Login</h3>

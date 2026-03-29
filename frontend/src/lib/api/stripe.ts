@@ -3,6 +3,10 @@ import { api } from './client'
 export interface StripeAccount {
   id: string
   publishable_key_suffix: string
+  stripe_account_id: string
+  account_name: string
+  account_email: string
+  charges_enabled: boolean
   is_active: boolean
   activated_at: string
   deactivated_at: string | null

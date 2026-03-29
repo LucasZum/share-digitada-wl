@@ -1,6 +1,6 @@
 'use client'
 import { useRouter } from 'next/navigation'
-import { Delete, ChevronRight } from 'lucide-react'
+import { Delete, ChevronRight, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { useAmountInput } from '@/hooks/useAmountInput'
 import { usePaymentStore } from '@/store/paymentStore'
@@ -47,9 +47,18 @@ export default function POSPage() {
             <p className="text-[9px] font-mono text-terminalLabel uppercase tracking-widest">Operador</p>
             <p className="font-semibold text-terminalText text-sm">{user?.full_name}</p>
           </div>
-          <div className="text-right">
-            <p className="text-[9px] font-mono text-terminalLabel uppercase tracking-widest">Terminal</p>
-            <p className="font-mono text-[11px] text-terminalMuted">TID-00482913</p>
+          <div className="flex items-start gap-3">
+            <div className="text-right">
+              <p className="text-[9px] font-mono text-terminalLabel uppercase tracking-widest">Terminal</p>
+              <p className="font-mono text-[11px] text-terminalMuted">TID-00482913</p>
+            </div>
+            <button
+              onClick={() => router.push('/settings')}
+              className="p-1.5 rounded-lg text-terminalMuted hover:text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-colors"
+              title="Configurações"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
           </div>
         </div>
         <div className="mt-2">

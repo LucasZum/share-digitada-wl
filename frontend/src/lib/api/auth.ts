@@ -20,3 +20,11 @@ export async function getMe(): Promise<User> {
   const { data } = await api.get<User>('/auth/me/')
   return data
 }
+
+export async function changePassword(newPassword: string): Promise<void> {
+  await api.post('/auth/change-password/', { new_password: newPassword })
+}
+
+export async function acceptTerms(): Promise<void> {
+  await api.post('/auth/accept-terms/')
+}
