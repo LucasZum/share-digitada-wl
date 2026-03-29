@@ -10,7 +10,7 @@ from audit_logs.service import AuditLogService
 from stripe_accounts.models import StripeAccount
 from stripe_accounts import stripe_service
 from .models import Transaction
-from .serializers import TransactionSerializer, CreateTransactionSerializer, ConfirmTransactionSerializer
+from .serializers import TransactionSerializer, CreateTransactionSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -61,57 +61,11 @@ class TransactionCreateView(generics.CreateAPIView):
             request=request,
         )
 
-        return Response(TransactionSerializer(tx).data, status=status.HTTP_201_CREATED)
+        response_data = TransactionSerializer(tx).data
+        response_data['client_secret'] = result['client_secret']
+        response_data['publishable_key'] = account.publishable_key
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
-
-class TransactionConfirmView(APIView):
-    permission_classes = [IsAuthenticated, IsActiveUser]
-
-    def post(self, request, pk):
-        try:
-            tx = Transaction.objects.select_related('stripe_account').get(pk=pk, user=request.user)
-        except Transaction.DoesNotExist:
-            return Response({'detail': 'Transação não encontrada.'}, status=status.HTTP_404_NOT_FOUND)
-
-        if tx.status != 'pending':
-            return Response({'detail': 'Transação não está em estado pendente.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer = ConfirmTransactionSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        data = serializer.validated_data
-
-        tx.status = 'processing'
-        tx.save(update_fields=['status'])
-
-        result = stripe_service.confirm_payment_intent(
-            secret_key_encrypted=tx.stripe_account.secret_key_encrypted,
-            payment_intent_id=tx.stripe_payment_intent_id,
-            card_number=data['card_number'],
-            exp_month=data['exp_month'],
-            exp_year=data['exp_year'],
-            cvc=data['cvc'],
-        )
-
-        if result['status'] == 'succeeded':
-            tx.status = 'succeeded'
-            tx.card_last4 = result.get('card_last4', '')
-            tx.card_brand = result.get('card_brand', '')
-            tx.save(update_fields=['status', 'card_last4', 'card_brand', 'updated_at'])
-        else:
-            tx.status = 'failed'
-            tx.error_message = result.get('error', 'Pagamento recusado.')
-            tx.save(update_fields=['status', 'error_message', 'updated_at'])
-
-        AuditLogService.log(
-            actor=request.user,
-            action='transaction.confirmed',
-            target_type='transaction',
-            target_id=str(tx.id),
-            metadata={'status': tx.status},
-            request=request,
-        )
-
-        return Response(TransactionSerializer(tx).data)
 
 
 class TransactionStatusView(APIView):
@@ -132,7 +86,9 @@ class TransactionStatusView(APIView):
             stripe_status = result.get('status', '')
             if stripe_status == 'succeeded':
                 tx.status = 'succeeded'
-                tx.save(update_fields=['status', 'updated_at'])
+                tx.card_last4 = result.get('card_last4', '')
+                tx.card_brand = result.get('card_brand', '')
+                tx.save(update_fields=['status', 'card_last4', 'card_brand', 'updated_at'])
             elif stripe_status in ('canceled', 'failed'):
                 tx.status = 'failed'
                 tx.save(update_fields=['status', 'updated_at'])

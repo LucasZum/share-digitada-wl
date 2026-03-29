@@ -21,14 +21,3 @@ class CreateTransactionSerializer(serializers.Serializer):
     amount = serializers.IntegerField(min_value=100, max_value=9999900, help_text='Amount in cents')
 
 
-class ConfirmTransactionSerializer(serializers.Serializer):
-    card_number = serializers.CharField(min_length=13, max_length=19)
-    exp_month = serializers.IntegerField(min_value=1, max_value=12)
-    exp_year = serializers.IntegerField(min_value=2024, max_value=2040)
-    cvc = serializers.CharField(min_length=3, max_length=4)
-
-    def validate_card_number(self, value):
-        digits = value.replace(' ', '').replace('-', '')
-        if not digits.isdigit():
-            raise serializers.ValidationError('Número do cartão inválido.')
-        return digits

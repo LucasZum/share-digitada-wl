@@ -13,7 +13,7 @@ const DIGITS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
 
 export default function POSPage() {
   const router = useRouter()
-  const { setAmount, setTransactionId, setStep } = usePaymentStore()
+  const { setAmount, setTransactionId, setClientSecret, setPublishableKey, setStep } = usePaymentStore()
   const { user } = useAuthStore()
   const { cents, display, handleDigit, handleBackspace, isValid } = useAmountInput()
   const [isLoading, setIsLoading] = useState(false)
@@ -26,6 +26,8 @@ export default function POSPage() {
       const tx = await createTransaction(cents)
       setAmount(cents)
       setTransactionId(tx.id)
+      setClientSecret(tx.client_secret)
+      setPublishableKey(tx.publishable_key)
       setStep(2)
       router.push('/payment/method')
     } catch {

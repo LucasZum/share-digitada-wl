@@ -56,59 +56,21 @@ def create_payment_intent(secret_key_encrypted: str, amount_cents: int, idempote
     return {'id': intent.id, 'client_secret': intent.client_secret, 'status': intent.status}
 
 
-def confirm_payment_intent(
-    secret_key_encrypted: str,
-    payment_intent_id: str,
-    card_number: str,
-    exp_month: int,
-    exp_year: int,
-    cvc: str,
-) -> dict:
-    client = _client(secret_key_encrypted)
-    try:
-        pm = client.payment_methods.create(
-            params={
-                'type': 'card',
-                'card': {
-                    'number': card_number.replace(' ', ''),
-                    'exp_month': exp_month,
-                    'exp_year': exp_year,
-                    'cvc': cvc,
-                },
-            }
-        )
-        intent = client.payment_intents.confirm(
-            payment_intent_id,
-            params={'payment_method': pm.id},
-        )
-
-        if intent.status == 'requires_action':
-            return {
-                'status': 'failed',
-                'error': STRIPE_ERROR_MAP['authentication_required'],
-                'stripe_status': intent.status,
-            }
-
-        return {
-            'status': intent.status,
-            'card_last4': pm.card.last4 if pm.card else None,
-            'card_brand': pm.card.brand.capitalize() if pm.card else None,
-        }
-
-    except stripe.CardError as exc:
-        code = exc.code or 'card_declined'
-        msg = STRIPE_ERROR_MAP.get(code, f'Pagamento recusado: {exc.user_message or code}')
-        return {'status': 'failed', 'error': msg, 'stripe_error_code': code}
-    except stripe.StripeError as exc:
-        logger.error('Stripe error on confirm: %s', exc)
-        return {'status': 'failed', 'error': STRIPE_ERROR_MAP['processing_error']}
-
 
 def get_payment_intent_status(secret_key_encrypted: str, payment_intent_id: str) -> dict:
     client = _client(secret_key_encrypted)
     try:
-        intent = client.payment_intents.retrieve(payment_intent_id)
-        return {'status': intent.status}
+        intent = client.payment_intents.retrieve(
+            payment_intent_id,
+            params={'expand': ['payment_method']},
+        )
+        result = {'status': intent.status}
+        if intent.status == 'succeeded' and intent.payment_method:
+            pm = intent.payment_method
+            if hasattr(pm, 'card') and pm.card:
+                result['card_last4'] = pm.card.last4
+                result['card_brand'] = pm.card.brand.capitalize()
+        return result
     except stripe.StripeError as exc:
         logger.error('Stripe polling error: %s', exc)
         return {'status': 'failed'}

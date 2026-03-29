@@ -14,3 +14,8 @@ export interface Transaction {
   created_at: string
   updated_at: string
 }
+
+export interface CreateTransactionResponse extends Transaction {
+  client_secret: string
+  publishable_key: string
+}
