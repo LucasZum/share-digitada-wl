@@ -3,6 +3,7 @@ from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
 
 from core.permissions import IsActiveUser
 from core.pagination import TransactionCursorPagination
@@ -94,6 +95,24 @@ class TransactionStatusView(APIView):
                 tx.save(update_fields=['status', 'updated_at'])
 
         return Response(TransactionSerializer(tx).data)
+
+
+class TransactionUpdateCustomerView(APIView):
+    permission_classes = [IsAuthenticated, IsActiveUser]
+
+    def patch(self, request, pk):
+        tx = get_object_or_404(Transaction, pk=pk, user=request.user)
+        cpf = request.data.get('cpf', '').replace('.', '').replace('-', '').strip()
+        if cpf:
+            try:
+                stripe_service.update_payment_intent_metadata(
+                    tx.stripe_account.secret_key_encrypted,
+                    tx.stripe_payment_intent_id,
+                    {'cpf': cpf},
+                )
+            except Exception as exc:
+                logger.warning('Could not update PaymentIntent metadata: %s', exc)
+        return Response({'ok': True})
 
 
 class TransactionListView(generics.ListAPIView):

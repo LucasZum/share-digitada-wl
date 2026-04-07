@@ -79,6 +79,11 @@ def create_payment_intent(secret_key_encrypted: str, amount_cents: int, idempote
 
 
 
+def update_payment_intent_metadata(secret_key_encrypted: str, payment_intent_id: str, metadata: dict) -> None:
+    client = _client(secret_key_encrypted)
+    client.payment_intents.update(payment_intent_id, params={'metadata': metadata})
+
+
 def get_payment_intent_status(secret_key_encrypted: str, payment_intent_id: str) -> dict:
     client = _client(secret_key_encrypted)
     try:

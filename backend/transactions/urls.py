@@ -3,10 +3,12 @@ from .views import (
     TransactionCreateView,
     TransactionStatusView,
     TransactionListView,
+    TransactionUpdateCustomerView,
 )
 
 urlpatterns = [
     path('', TransactionListView.as_view(), name='transaction-list'),
     path('create/', TransactionCreateView.as_view(), name='transaction-create'),
     path('<uuid:pk>/status/', TransactionStatusView.as_view(), name='transaction-status'),
+    path('<uuid:pk>/customer/', TransactionUpdateCustomerView.as_view(), name='transaction-update-customer'),
 ]
