@@ -1,8 +1,9 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ChevronLeft } from 'lucide-react'
-import { getUser, getUserMetrics } from '@/lib/api/admin'
+import { ChevronLeft, Link2 } from 'lucide-react'
+import toast from 'react-hot-toast'
+import { getUser, getUserMetrics, togglePaymentLinks } from '@/lib/api/admin'
 import type { User, UserMetrics } from '@/types/user'
 import { centsToBRL } from '@/lib/utils/currency'
 import { Card } from '@/components/ui/Card'
@@ -27,6 +28,7 @@ export default function UserDetailPage() {
   const [metrics, setMetrics] = useState<UserMetrics | null>(null)
   const [period, setPeriod] = useState<Period>('30d')
   const [isLoading, setIsLoading] = useState(true)
+  const [isTogglingLinks, setIsTogglingLinks] = useState(false)
 
   useEffect(() => {
     getUser(id).then(setUser).catch(() => router.replace('/admin/users'))
@@ -36,6 +38,24 @@ export default function UserDetailPage() {
     if (!id) return
     getUserMetrics(id, period).then(setMetrics).finally(() => setIsLoading(false))
   }, [id, period])
+
+  async function handleTogglePaymentLinks() {
+    if (!user) return
+    setIsTogglingLinks(true)
+    try {
+      const updated = await togglePaymentLinks(user.id)
+      setUser(updated)
+      toast.success(
+        updated.payment_links_enabled
+          ? 'Links de pagamento habilitados.'
+          : 'Links de pagamento desabilitados.'
+      )
+    } catch {
+      toast.error('Erro ao alterar permissão de links.')
+    } finally {
+      setIsTogglingLinks(false)
+    }
+  }
 
   if (!user) return <div className="flex justify-center py-20"><Spinner /></div>
 
@@ -69,6 +89,38 @@ export default function UserDetailPage() {
           </div>
         )}
       </Card>
+
+      {/* Permissions */}
+      {user.role !== 'admin' && (
+        <Card flat>
+          <h3 className="font-semibold text-gray-900 mb-3">Permissões</h3>
+          <div className="flex items-center justify-between py-2">
+            <div className="flex items-center gap-2">
+              <Link2 className="w-4 h-4 text-gray-400" />
+              <div>
+                <p className="text-sm font-medium text-gray-900">Links de Pagamento</p>
+                <p className="text-xs text-gray-400">Permite criar e compartilhar links de cobrança</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Badge variant={user.payment_links_enabled ? 'success' : 'default'}>
+                {user.payment_links_enabled ? 'Habilitado' : 'Desabilitado'}
+              </Badge>
+              <button
+                onClick={handleTogglePaymentLinks}
+                disabled={isTogglingLinks}
+                className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-colors ${
+                  user.payment_links_enabled
+                    ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                    : 'bg-[var(--color-primary)]/10 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/20'
+                }`}
+              >
+                {isTogglingLinks ? '...' : user.payment_links_enabled ? 'Desabilitar' : 'Habilitar'}
+              </button>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Metrics */}
       <Card flat>

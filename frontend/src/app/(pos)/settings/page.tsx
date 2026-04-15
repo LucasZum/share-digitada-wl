@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, User, Shield, LogOut, Settings } from 'lucide-react'
+import { ChevronLeft, User, Shield, LogOut, Settings, Link2, ChevronRight } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 import { logout } from '@/lib/api/auth'
@@ -83,6 +83,23 @@ export default function SettingsPage() {
           <Badge variant="info" className="ml-auto">{user?.role}</Badge>
         </div>
       </Card>
+
+      {/* Payment Links */}
+      {user?.payment_links_enabled && (
+        <button
+          onClick={() => router.push('/links')}
+          className="flex items-center gap-3 p-4 rounded-xl bg-white border border-gray-100 hover:border-[var(--color-primary)]/30 hover:bg-[var(--color-primary)]/5 transition-colors text-left"
+        >
+          <div className="w-9 h-9 rounded-lg bg-[var(--color-primary)]/10 flex items-center justify-center flex-shrink-0">
+            <Link2 className="w-4 h-4 text-[var(--color-primary)]" />
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-gray-900 text-sm">Links de Pagamento</p>
+            <p className="text-xs text-gray-400">Crie e gerencie cobranças por link</p>
+          </div>
+          <ChevronRight className="w-4 h-4 text-gray-300" />
+        </button>
+      )}
 
       {/* Stripe */}
       <Card>

@@ -32,6 +32,7 @@ LOCAL_APPS = [
     'authentication',
     'stripe_accounts',
     'transactions',
+    'payment_links',
     'admin_dashboard',
     'audit_logs',
     'notifications',
@@ -168,6 +169,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # ─── CORS ─────────────────────────────────────────────────────────────────────
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
 CORS_ALLOWED_ORIGINS = config('FRONTEND_URL', default='http://localhost:3000', cast=Csv())
 CORS_ALLOW_CREDENTIALS = True
 
@@ -182,6 +184,10 @@ CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 # ─── Encryption ───────────────────────────────────────────────────────────────
 ENCRYPTION_KEY = config('ENCRYPTION_KEY', default='0' * 64)
+
+# ─── Stripe Platform ──────────────────────────────────────────────────────────
+STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY', default='')
+STRIPE_PUBLISHABLE_KEY = config('STRIPE_PUBLISHABLE_KEY', default='')
 
 # ─── Logging ──────────────────────────────────────────────────────────────────
 LOGGING = {

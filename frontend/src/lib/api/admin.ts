@@ -41,6 +41,11 @@ export async function getUserMetrics(id: string, period = '30d'): Promise<UserMe
   return data
 }
 
+export async function togglePaymentLinks(id: string): Promise<User> {
+  const { data } = await api.patch<User>(`/admin/users/${id}/toggle-payment-links/`)
+  return data
+}
+
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 export async function getDashboardSummary(period = '30d') {
   const { data } = await api.get('/admin/dashboard/summary/', { params: { period } })

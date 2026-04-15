@@ -105,6 +105,23 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         )
         return Response(UserSerializer(user).data)
 
+    @action(detail=True, methods=['patch'], url_path='toggle-payment-links')
+    def toggle_payment_links(self, request, pk=None):
+        user = self.get_object()
+        user.payment_links_enabled = not user.payment_links_enabled
+        user.save(update_fields=['payment_links_enabled', 'updated_at'])
+
+        from audit_logs.service import AuditLogService
+        AuditLogService.log(
+            actor=request.user,
+            action='user.payment_links_toggled',
+            target_type='user',
+            target_id=str(user.id),
+            metadata={'payment_links_enabled': user.payment_links_enabled},
+            request=request,
+        )
+        return Response(UserSerializer(user).data)
+
     @action(detail=True, methods=['get'], url_path='metrics')
     def metrics(self, request, pk=None):
         user = self.get_object()

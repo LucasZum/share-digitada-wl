@@ -8,6 +8,7 @@ urlpatterns = [
     path('api/auth/', include('authentication.urls')),
     path('api/stripe/', include('stripe_accounts.urls')),
     path('api/transactions/', include('transactions.urls')),
+    path('api/payment-links/', include('payment_links.urls')),
     path('api/admin/', include('users.urls')),
     path('api/admin/', include('admin_dashboard.urls')),
     path('api/admin/', include('audit_logs.urls')),

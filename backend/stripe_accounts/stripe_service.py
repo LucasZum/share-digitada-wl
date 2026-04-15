@@ -101,3 +101,87 @@ def get_payment_intent_status(secret_key_encrypted: str, payment_intent_id: str)
     except stripe.StripeError as exc:
         logger.error('Stripe polling error: %s', exc)
         return {'status': 'failed'}
+
+
+def create_payment_intent_for_link(secret_key_encrypted: str, amount_cents: int, link_id: str) -> dict:
+    """Create a fresh PaymentIntent for each payment link visit."""
+    client = _client(secret_key_encrypted)
+    intent = client.payment_intents.create(
+        params={
+            'amount': amount_cents,
+            'currency': 'brl',
+            'payment_method_types': ['card'],
+            'capture_method': 'automatic',
+            'metadata': {'payment_link_id': link_id},
+        },
+    )
+    return {'id': intent.id, 'client_secret': intent.client_secret}
+
+
+def verify_payment_intent_succeeded(secret_key_encrypted: str, payment_intent_id: str) -> dict:
+    """
+    Verify that a PaymentIntent has succeeded and return card details.
+    Returns {'succeeded': bool, 'card_last4': str, 'card_brand': str}.
+    """
+    client = _client(secret_key_encrypted)
+    try:
+        intent = client.payment_intents.retrieve(
+            payment_intent_id,
+            params={'expand': ['payment_method']},
+        )
+        if intent.status != 'succeeded':
+            return {'succeeded': False}
+        result = {'succeeded': True, 'card_last4': '', 'card_brand': ''}
+        if intent.payment_method:
+            pm = intent.payment_method
+            if hasattr(pm, 'card') and pm.card:
+                result['card_last4'] = pm.card.last4
+                result['card_brand'] = pm.card.brand.capitalize()
+        return result
+    except stripe.StripeError as exc:
+        logger.error('Stripe verify error for link: %s', exc)
+        return {'succeeded': False}
+
+
+# ─── Platform-level Stripe functions (shared account from settings) ───────────
+
+def _platform_client() -> stripe.StripeClient:
+    from django.conf import settings
+    return stripe.StripeClient(settings.STRIPE_SECRET_KEY)
+
+
+def create_payment_intent_platform(amount_cents: int, link_id: str) -> dict:
+    """Create a fresh PaymentIntent using the platform Stripe account."""
+    client = _platform_client()
+    intent = client.payment_intents.create(
+        params={
+            'amount': amount_cents,
+            'currency': 'brl',
+            'payment_method_types': ['card'],
+            'capture_method': 'automatic',
+            'metadata': {'payment_link_id': link_id},
+        },
+    )
+    return {'id': intent.id, 'client_secret': intent.client_secret}
+
+
+def verify_payment_intent_platform(payment_intent_id: str) -> dict:
+    """Verify a PaymentIntent succeeded using the platform Stripe account."""
+    client = _platform_client()
+    try:
+        intent = client.payment_intents.retrieve(
+            payment_intent_id,
+            params={'expand': ['payment_method']},
+        )
+        if intent.status != 'succeeded':
+            return {'succeeded': False}
+        result = {'succeeded': True, 'card_last4': '', 'card_brand': ''}
+        if intent.payment_method:
+            pm = intent.payment_method
+            if hasattr(pm, 'card') and pm.card:
+                result['card_last4'] = pm.card.last4
+                result['card_brand'] = pm.card.brand.capitalize()
+        return result
+    except stripe.StripeError as exc:
+        logger.error('Stripe platform verify error: %s', exc)
+        return {'succeeded': False}

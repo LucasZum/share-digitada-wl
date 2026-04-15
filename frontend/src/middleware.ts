@@ -19,7 +19,7 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Public paths — always accessible
-  const publicPaths = ['/login']
+  const publicPaths = ['/login', '/pay']
   if (publicPaths.some((p) => pathname.startsWith(p))) {
     return NextResponse.next()
   }
@@ -50,8 +50,8 @@ export function middleware(request: NextRequest) {
   // POS routes — redirect admin to dashboard
   if (pathname.startsWith('/pos') || pathname.startsWith('/payment') ||
       pathname.startsWith('/history') || pathname.startsWith('/settings') ||
-      pathname.startsWith('/setup') || pathname.startsWith('/first-access') ||
-      pathname.startsWith('/terms')) {
+      pathname.startsWith('/links') || pathname.startsWith('/setup') ||
+      pathname.startsWith('/first-access') || pathname.startsWith('/terms')) {
     if (role === 'admin') {
       return NextResponse.redirect(new URL('/admin/dashboard', request.url))
     }
@@ -62,6 +62,6 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|icons|api).*)',
+    '/((?!_next/static|_next/image|favicon.ico|icons|api|.*\\.(?:png|jpg|jpeg|svg|gif|webp|ico)).*)',
   ],
 }

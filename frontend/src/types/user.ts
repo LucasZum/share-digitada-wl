@@ -9,6 +9,7 @@ export interface User {
   notice_message?: string
   must_change_password: boolean
   terms_accepted: boolean
+  payment_links_enabled: boolean
   created_at: string
   updated_at: string
 }
